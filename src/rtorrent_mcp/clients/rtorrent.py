@@ -135,8 +135,6 @@ class RtorrentClient:
         await asyncio.sleep(1)
         try:
             await self.call("d.custom2.set", h, value)
-            readback = await self.call("d.custom2", h)
-            log.info("rtorrent.comment_set", hash=h, stored=readback)
         except RtorrentError as exc:
             log.warning("rtorrent.set_comment_failed", hash=h, error=str(exc))
 
