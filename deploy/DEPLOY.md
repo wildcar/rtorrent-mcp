@@ -38,7 +38,7 @@ You should see an XML response listing rtorrent methods.
 ## 2. Create the service user and install directory
 
 ```bash
-sudo useradd --system --shell /usr/sbin/nologin --home /home/movie movie
+sudo useradd --system --shell /usr/sbin/nologin --home /home/movie --create-home movie
 sudo mkdir -p /opt/rtorrent-mcp /etc/rtorrent-mcp
 sudo chown movie:movie /opt/rtorrent-mcp
 ```
