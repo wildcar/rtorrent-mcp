@@ -7,6 +7,7 @@ Python values / dicts; the MCP tool layer wraps them into Pydantic models.
 
 from __future__ import annotations
 
+import urllib.parse
 import xmlrpc.client
 from typing import Any
 
@@ -120,9 +121,15 @@ class RtorrentClient:
         return hash_
 
     async def _set_comment(self, hash_: str, comment: str) -> None:
-        """Store a URL or note in rtorrent's named custom field 'comment'."""
+        """Write the comment URL into custom2 the way ruTorrent expects it.
+
+        ruTorrent reads the torrent's comment field on add, rawurlencode-s it,
+        prepends the sentinel "VRS24mrker", and stores the result in d.custom2.
+        We replicate that exact format so the URL appears in the ruTorrent UI.
+        """
+        value = "VRS24mrker" + urllib.parse.quote(comment, safe="")
         try:
-            await self.call("d.custom.set", hash_.upper(), "comment", comment)
+            await self.call("d.custom2.set", hash_.upper(), value)
         except RtorrentError as exc:
             log.warning("rtorrent.set_comment_failed", hash=hash_, error=str(exc))
 
