@@ -85,7 +85,7 @@ class RtorrentClient:
     # -- ingestion -------------------------------------------------------
 
     async def add_torrent_file(
-        self, content: bytes, *, download_dir: str | None, start: bool
+        self, content: bytes, *, download_dir: str | None, start: bool, comment: str | None = None
     ) -> str:
         """Load a .torrent from raw bytes. Returns the info-hash.
 
@@ -98,16 +98,20 @@ class RtorrentClient:
         extra: list[str] = []
         if download_dir:
             extra.append(f"d.directory.set={download_dir}")
+        if comment:
+            extra.append(f"d.custom.set=comment,{comment}")
         await self.call(method, "", xmlrpc.client.Binary(content), *extra)
         # rtorrent's load.* doesn't return the hash; derive it ourselves from
         # the torrent's info dict so we can report it to the caller.
         return _info_hash_from_torrent(content)
 
-    async def add_magnet(self, magnet: str, *, download_dir: str | None, start: bool) -> str | None:
+    async def add_magnet(self, magnet: str, *, download_dir: str | None, start: bool, comment: str | None = None) -> str | None:
         method = "load.start_verbose" if start else "load.verbose"
         extra: list[str] = []
         if download_dir:
             extra.append(f"d.directory.set={download_dir}")
+        if comment:
+            extra.append(f"d.custom.set=comment,{comment}")
         await self.call(method, "", magnet, *extra)
         # Magnet hash is in the URI as ``xt=urn:btih:<hash>``; extract it so
         # callers can poll status without guessing.

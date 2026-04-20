@@ -58,6 +58,7 @@ async def add_torrent_impl(
     download_dir: str | None = None,
     kind: MediaKind | None = None,
     start: bool = True,
+    comment: str | None = None,
 ) -> AddTorrentResponse:
     """Add a torrent by either raw bytes or magnet URI.
 
@@ -87,11 +88,11 @@ async def add_torrent_impl(
                     )
                 )
             hash_ = await ctx.rtorrent.add_torrent_file(
-                content, download_dir=directory, start=start
+                content, download_dir=directory, start=start, comment=comment
             )
         else:
             assert magnet is not None
-            magnet_hash = await ctx.rtorrent.add_magnet(magnet, download_dir=directory, start=start)
+            magnet_hash = await ctx.rtorrent.add_magnet(magnet, download_dir=directory, start=start, comment=comment)
             if magnet_hash is None:
                 return AddTorrentResponse(
                     error=_err("invalid_argument", "magnet URI missing xt=urn:btih:<hash>")

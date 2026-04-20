@@ -65,6 +65,7 @@ def build_server(ctx: AppContext) -> FastMCP:
         download_dir: str | None = None,
         kind: MediaKind | None = None,
         start: bool = True,
+        comment: str | None = None,
     ) -> AddTorrentResponse:
         """Enqueue a torrent. Provide either ``torrent_file_base64`` or ``magnet``."""
         return await add_torrent_impl(
@@ -74,6 +75,7 @@ def build_server(ctx: AppContext) -> FastMCP:
             download_dir=download_dir,
             kind=kind,
             start=start,
+            comment=comment,
         )
 
     async def list_downloads(active_only: bool = False) -> ListDownloadsResponse:
