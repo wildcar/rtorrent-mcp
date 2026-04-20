@@ -52,6 +52,8 @@ uv run rtorrent-mcp
 
 A sample systemd unit lives in [`deploy/rtorrent-mcp.service`](deploy/rtorrent-mcp.service).
 
+Full step-by-step deployment guide (remote host + bot wiring): [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+
 ## Environment variables
 
 | Var | Default | Notes |
