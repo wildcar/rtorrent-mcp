@@ -173,15 +173,11 @@ async def test_set_download_dir_requires_both_args(app_ctx: AppContext) -> None:
     assert resp.error is not None and resp.error.code == "invalid_argument"
 
 
-async def test_remove_without_delete_data_skips_rmtree(
-    app_ctx: AppContext, fake_rtorrent: FakeRtorrent, tmp_path, monkeypatch
+async def test_remove_only_erases_session_entry(
+    app_ctx: AppContext, fake_rtorrent: FakeRtorrent
 ) -> None:
     fake_rtorrent.on("d.erase", lambda h: 0)
-    # Ensure rmtree is NOT called when delete_data=False.
-    called: list[str] = []
-    monkeypatch.setattr(
-        "rtorrent_mcp.clients.rtorrent.shutil.rmtree",
-        lambda *a, **kw: called.append("yes"),
-    )
-    resp = await remove_impl(app_ctx, hash="A" * 40, delete_data=False)
-    assert resp.ok is True and not called
+    resp = await remove_impl(app_ctx, hash="A" * 40)
+    assert resp.ok is True
+    # d.erase must be the only call — the MCP never touches the filesystem.
+    assert [c[0] for c in fake_rtorrent.calls] == ["d.erase"]

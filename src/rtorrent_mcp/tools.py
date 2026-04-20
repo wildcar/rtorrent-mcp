@@ -159,15 +159,8 @@ async def set_download_dir_impl(ctx: AppContext, *, hash: str, directory: str) -
     return AckResponse(ok=True)
 
 
-async def remove_impl(ctx: AppContext, *, hash: str, delete_data: bool = False) -> AckResponse:
-    if not hash:
-        return AckResponse(error=_err("invalid_argument", "hash is required"))
-    try:
-        await ctx.rtorrent.remove(hash, delete_data=delete_data)
-    except RtorrentError as exc:
-        log.warning("rtorrent.remove_failed", hash=hash, error=str(exc))
-        return AckResponse(error=_err(_rtorrent_err_code(exc), str(exc)))
-    return AckResponse(ok=True)
+async def remove_impl(ctx: AppContext, *, hash: str) -> AckResponse:
+    return await _simple_ack(ctx.rtorrent.remove, hash)
 
 
 async def _simple_ack(fn, hash_: str) -> AckResponse:  # type: ignore[no-untyped-def]

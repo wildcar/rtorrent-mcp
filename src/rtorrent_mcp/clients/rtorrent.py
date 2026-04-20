@@ -7,10 +7,7 @@ Python values / dicts; the MCP tool layer wraps them into Pydantic models.
 
 from __future__ import annotations
 
-import asyncio
-import shutil
 import xmlrpc.client
-from pathlib import Path
 from typing import Any
 
 import structlog
@@ -153,47 +150,14 @@ class RtorrentClient:
     async def set_directory(self, hash_: str, directory: str) -> None:
         await self.call("d.directory.set", hash_.upper(), directory)
 
-    async def remove(self, hash_: str, *, delete_data: bool) -> None:
-        """Erase the download from rtorrent and optionally nuke its payload.
-
-        rtorrent's ``d.erase`` only forgets the metadata — files stay on
-        disk. If the caller asked for ``delete_data``, we snapshot the
-        directory first, erase, then rmtree. Order matters: rtorrent keeps
-        file handles open until erase completes.
-        """
-        h = hash_.upper()
-        directory: str | None = None
-        if delete_data:
-            try:
-                directory = str(await self.call("d.directory", h))
-            except RtorrentError:
-                directory = None
-        await self.call("d.erase", h)
-        if delete_data and directory:
-            await asyncio.to_thread(_rmtree_safe, directory)
+    async def remove(self, hash_: str) -> None:
+        """Erase the download from rtorrent's session. Files on disk are
+        left untouched — rtorrent's ``d.erase`` never deletes payload data,
+        and we deliberately don't add that capability to the MCP."""
+        await self.call("d.erase", hash_.upper())
 
 
 # -- helpers ------------------------------------------------------------
-
-
-def _rmtree_safe(directory: str) -> None:
-    """Delete ``directory`` while refusing obviously dangerous targets.
-
-    Runs in a thread (filesystem IO is blocking). The sanity check is crude
-    on purpose: if rtorrent reports a payload path of "/" or "/home" the
-    config is broken, and we'd rather fail loud than wipe the host.
-    """
-    p = Path(directory)
-    if str(p) in ("", "/", "/mnt", "/home") or not p.is_absolute():
-        log.warning("rtorrent.remove.refused_unsafe_path", path=str(p))
-        return
-    try:
-        if p.is_dir():
-            shutil.rmtree(p, ignore_errors=True)
-        elif p.exists():
-            p.unlink(missing_ok=True)
-    except OSError as exc:
-        log.warning("rtorrent.remove.data_delete_failed", path=str(p), error=str(exc))
 
 
 def _info_hash_from_magnet(magnet: str) -> str | None:

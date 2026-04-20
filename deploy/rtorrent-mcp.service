@@ -21,8 +21,8 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
 PrivateTmp=true
-ReadWritePaths=/opt/rtorrent-mcp /mnt/storage/Media/Video
-# Needed when SCGI uses a unix socket under /tmp or /var/run:
+ReadWritePaths=/opt/rtorrent-mcp
+# Needed only when SCGI uses a unix socket under /tmp or /var/run:
 # ReadWritePaths=/tmp/rtorrent.sock
 
 [Install]

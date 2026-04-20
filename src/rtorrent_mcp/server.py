@@ -96,9 +96,9 @@ def build_server(ctx: AppContext) -> FastMCP:
         """Change the destination directory of an existing download."""
         return await set_download_dir_impl(ctx, hash=hash, directory=directory)
 
-    async def remove(hash: str, delete_data: bool = False) -> AckResponse:
-        """Erase the download from rtorrent. If ``delete_data`` also rm -rf its payload."""
-        return await remove_impl(ctx, hash=hash, delete_data=delete_data)
+    async def remove(hash: str) -> AckResponse:
+        """Erase the download from rtorrent's session. Files on disk are not touched."""
+        return await remove_impl(ctx, hash=hash)
 
     mcp.tool()(add_torrent)
     mcp.tool()(list_downloads)
