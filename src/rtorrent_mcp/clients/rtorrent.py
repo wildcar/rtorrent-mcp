@@ -7,6 +7,7 @@ Python values / dicts; the MCP tool layer wraps them into Pydantic models.
 
 from __future__ import annotations
 
+import asyncio
 import urllib.parse
 import xmlrpc.client
 from typing import Any
@@ -128,10 +129,16 @@ class RtorrentClient:
         We replicate that exact format so the URL appears in the ruTorrent UI.
         """
         value = "VRS24mrker" + urllib.parse.quote(comment, safe="")
+        h = hash_.upper()
+        # Give rtorrent a moment to register the download before we write
+        # custom fields — calling d.custom2.set too early returns a fault.
+        await asyncio.sleep(1)
         try:
-            await self.call("d.custom2.set", hash_.upper(), value)
+            await self.call("d.custom2.set", h, value)
+            readback = await self.call("d.custom2", h)
+            log.info("rtorrent.comment_set", hash=h, stored=readback)
         except RtorrentError as exc:
-            log.warning("rtorrent.set_comment_failed", hash=hash_, error=str(exc))
+            log.warning("rtorrent.set_comment_failed", hash=h, error=str(exc))
 
     # -- listing / status ------------------------------------------------
 
