@@ -1,0 +1,29 @@
+[Unit]
+Description=rtorrent-mcp MCP server
+After=network-online.target rtorrent.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rtorrent
+Group=rtorrent
+WorkingDirectory=/opt/rtorrent-mcp
+EnvironmentFile=/etc/rtorrent-mcp/rtorrent-mcp.env
+Environment=MCP_TRANSPORT=streamable-http
+Environment=MCP_HTTP_HOST=0.0.0.0
+Environment=MCP_HTTP_PORT=8768
+ExecStart=/home/rtorrent/.local/bin/uv run rtorrent-mcp
+Restart=on-failure
+RestartSec=3
+
+# --- sandboxing -------------------------------------------------------------
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/opt/rtorrent-mcp /mnt/storage/Media/Video
+# Needed when SCGI uses a unix socket under /tmp or /var/run:
+# ReadWritePaths=/tmp/rtorrent.sock
+
+[Install]
+WantedBy=multi-user.target
