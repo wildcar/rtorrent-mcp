@@ -98,24 +98,33 @@ class RtorrentClient:
         extra: list[str] = []
         if download_dir:
             extra.append(f"d.directory.set={download_dir}")
-        if comment:
-            extra.append(f"d.custom.set=comment,{comment}")
         await self.call(method, "", xmlrpc.client.Binary(content), *extra)
         # rtorrent's load.* doesn't return the hash; derive it ourselves from
         # the torrent's info dict so we can report it to the caller.
-        return _info_hash_from_torrent(content)
+        hash_ = _info_hash_from_torrent(content)
+        if comment:
+            await self._set_comment(hash_, comment)
+        return hash_
 
     async def add_magnet(self, magnet: str, *, download_dir: str | None, start: bool, comment: str | None = None) -> str | None:
         method = "load.start_verbose" if start else "load.verbose"
         extra: list[str] = []
         if download_dir:
             extra.append(f"d.directory.set={download_dir}")
-        if comment:
-            extra.append(f"d.custom.set=comment,{comment}")
         await self.call(method, "", magnet, *extra)
         # Magnet hash is in the URI as ``xt=urn:btih:<hash>``; extract it so
         # callers can poll status without guessing.
-        return _info_hash_from_magnet(magnet)
+        hash_ = _info_hash_from_magnet(magnet)
+        if comment and hash_:
+            await self._set_comment(hash_, comment)
+        return hash_
+
+    async def _set_comment(self, hash_: str, comment: str) -> None:
+        """Store a URL or note in rtorrent's named custom field 'comment'."""
+        try:
+            await self.call("d.custom.set", hash_.upper(), "comment", comment)
+        except RtorrentError as exc:
+            log.warning("rtorrent.set_comment_failed", hash=hash_, error=str(exc))
 
     # -- listing / status ------------------------------------------------
 
