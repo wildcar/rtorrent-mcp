@@ -5,14 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=rtorrent
-Group=rtorrent
+User=movie
+Group=movie
 WorkingDirectory=/opt/rtorrent-mcp
 EnvironmentFile=/etc/rtorrent-mcp/rtorrent-mcp.env
 Environment=MCP_TRANSPORT=streamable-http
 Environment=MCP_HTTP_HOST=0.0.0.0
 Environment=MCP_HTTP_PORT=8768
-ExecStart=/home/rtorrent/.local/bin/uv run rtorrent-mcp
+ExecStart=/home/movie/.local/bin/uv run rtorrent-mcp
 Restart=on-failure
 RestartSec=3
 

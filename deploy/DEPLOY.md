@@ -38,9 +38,9 @@ You should see an XML response listing rtorrent methods.
 ## 2. Create the service user and install directory
 
 ```bash
-sudo useradd --system --shell /usr/sbin/nologin --home /opt/rtorrent-mcp rtorrent-mcp
+sudo useradd --system --shell /usr/sbin/nologin --home /home/movie movie
 sudo mkdir -p /opt/rtorrent-mcp /etc/rtorrent-mcp
-sudo chown rtorrent-mcp:rtorrent-mcp /opt/rtorrent-mcp
+sudo chown movie:movie /opt/rtorrent-mcp
 ```
 
 ---
@@ -48,9 +48,9 @@ sudo chown rtorrent-mcp:rtorrent-mcp /opt/rtorrent-mcp
 ## 3. Install uv for the service user
 
 ```bash
-sudo -u rtorrent-mcp bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
-# uv lands in /opt/rtorrent-mcp/.local/bin/uv — adjust ExecStart if different:
-sudo -u rtorrent-mcp bash -c 'which uv || echo "check PATH"'
+sudo -u movie bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+# uv lands in /home/movie/.local/bin/uv — adjust ExecStart if different:
+sudo -u movie bash -c 'which uv || echo "check PATH"'
 ```
 
 ---
@@ -58,9 +58,9 @@ sudo -u rtorrent-mcp bash -c 'which uv || echo "check PATH"'
 ## 4. Clone the repository
 
 ```bash
-sudo -u rtorrent-mcp git clone https://github.com/wildcar/rtorrent-mcp.git /opt/rtorrent-mcp
+sudo -u movie git clone https://github.com/wildcar/rtorrent-mcp.git /opt/rtorrent-mcp
 cd /opt/rtorrent-mcp
-sudo -u rtorrent-mcp /opt/rtorrent-mcp/.local/bin/uv sync --frozen
+sudo -u movie /home/movie/.local/bin/uv sync --frozen
 ```
 
 ---
@@ -70,7 +70,7 @@ sudo -u rtorrent-mcp /opt/rtorrent-mcp/.local/bin/uv sync --frozen
 ```bash
 sudo cp /opt/rtorrent-mcp/.env.example /etc/rtorrent-mcp/rtorrent-mcp.env
 sudo chmod 640 /etc/rtorrent-mcp/rtorrent-mcp.env
-sudo chown root:rtorrent-mcp /etc/rtorrent-mcp/rtorrent-mcp.env
+sudo chown root:movie /etc/rtorrent-mcp/rtorrent-mcp.env
 sudo nano /etc/rtorrent-mcp/rtorrent-mcp.env
 ```
 
@@ -173,8 +173,8 @@ If `RTORRENT_MCP_URL` is not set, the bot falls back to sending the `.torrent` f
 
 ```bash
 cd /opt/rtorrent-mcp
-sudo -u rtorrent-mcp git pull
-sudo -u rtorrent-mcp /opt/rtorrent-mcp/.local/bin/uv sync --frozen
+sudo -u movie git pull
+sudo -u movie /home/movie/.local/bin/uv sync --frozen
 sudo systemctl restart rtorrent-mcp
 ```
 
