@@ -39,6 +39,15 @@ class Download(BaseModel):
     up_rate: int = Field(0, ge=0, description="Upload rate in bytes/sec.")
     ratio: float = Field(0.0, description="Share ratio as float (0.0 = nothing uploaded).")
     directory: str = Field("", description="Absolute path rtorrent stores the payload in.")
+    base_path: str = Field(
+        "",
+        description=(
+            "Absolute path to the actual payload: a single file for "
+            "single-file torrents, the data folder for multi-file ones. "
+            "Empty until rtorrent has resolved metadata. Prefer this "
+            "over ``directory`` when looking up the downloaded content."
+        ),
+    )
     state: DownloadState = Field("stopped")
 
 

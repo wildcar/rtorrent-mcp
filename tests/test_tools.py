@@ -31,7 +31,12 @@ _INFO_HASH = hashlib.sha1(_INFO).hexdigest().upper()
 
 def _row(hash_: str = _INFO_HASH, name: str = "demo", complete: int = 0) -> list:
     # Must match _MULTICALL_METHODS ordering in clients/rtorrent.py.
-    return [hash_, name, 1024, 0, 0, 0, 0, "/downloads/demo", 1, 1, complete]
+    return [
+        hash_, name, 1024, 0, 0, 0, 0,
+        "/downloads/demo",       # d.directory
+        "/downloads/demo/file",  # d.base_path
+        1, 1, complete,
+    ]
 
 
 async def test_add_torrent_file_passes_directory_and_returns_hash(
@@ -53,6 +58,7 @@ async def test_add_torrent_file_passes_directory_and_returns_hash(
             "d.up.rate",
             "d.ratio",
             "d.directory",
+            "d.base_path",
             "d.state",
             "d.is_active",
             "d.complete",
@@ -104,6 +110,7 @@ async def test_add_magnet_returns_hash_from_uri(
         ("d.up.rate", 0),
         ("d.ratio", 0),
         ("d.directory", ""),
+        ("d.base_path", ""),
         ("d.state", 0),
         ("d.is_active", 0),
         ("d.complete", 0),
@@ -148,6 +155,7 @@ async def test_get_download_status_not_found(
         "d.up.rate",
         "d.ratio",
         "d.directory",
+        "d.base_path",
         "d.state",
         "d.is_active",
         "d.complete",

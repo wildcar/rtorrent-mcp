@@ -35,6 +35,7 @@ _MULTICALL_METHODS: tuple[str, ...] = (
     "d.up.rate=",
     "d.ratio=",
     "d.directory=",
+    "d.base_path=",
     "d.state=",
     "d.is_active=",
     "d.complete=",
@@ -42,7 +43,20 @@ _MULTICALL_METHODS: tuple[str, ...] = (
 
 
 def _row_to_dict(row: tuple[Any, ...]) -> dict[str, Any]:
-    hash_, name, size_b, done_b, down_r, up_r, ratio, directory, state, active, complete = row
+    (
+        hash_,
+        name,
+        size_b,
+        done_b,
+        down_r,
+        up_r,
+        ratio,
+        directory,
+        base_path,
+        state,
+        active,
+        complete,
+    ) = row
     if complete:
         label = "complete"
     elif not state:
@@ -61,6 +75,11 @@ def _row_to_dict(row: tuple[Any, ...]) -> dict[str, Any]:
         # rtorrent returns ratio as permille (1000 = 1:1), not a float.
         "ratio": round(int(ratio) / 1000.0, 3),
         "directory": str(directory),
+        # base_path is the absolute path to the actual content: a single file
+        # for single-file torrents, the data folder for multi-file torrents.
+        # `directory` is just the parent download dir, which is shared across
+        # many torrents and useless for "find the video file" callers.
+        "base_path": str(base_path or ""),
         "state": label,
     }
 
