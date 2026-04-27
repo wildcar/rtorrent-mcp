@@ -36,6 +36,8 @@ def _resolve_dir(
         return ctx.settings.rtorrent_download_dir_movies
     if kind == "series":
         return ctx.settings.rtorrent_download_dir_series
+    if kind == "cartoon":
+        return ctx.settings.rtorrent_download_dir_cartoons
     return None
 
 
@@ -92,7 +94,9 @@ async def add_torrent_impl(
             )
         else:
             assert magnet is not None
-            magnet_hash = await ctx.rtorrent.add_magnet(magnet, download_dir=directory, start=start, comment=comment)
+            magnet_hash = await ctx.rtorrent.add_magnet(
+                magnet, download_dir=directory, start=start, comment=comment
+            )
             if magnet_hash is None:
                 return AddTorrentResponse(
                     error=_err("invalid_argument", "magnet URI missing xt=urn:btih:<hash>")

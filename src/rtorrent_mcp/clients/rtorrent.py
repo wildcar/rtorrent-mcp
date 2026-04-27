@@ -127,7 +127,9 @@ class RtorrentClient:
             await self._set_comment(hash_, comment)
         return hash_
 
-    async def add_magnet(self, magnet: str, *, download_dir: str | None, start: bool, comment: str | None = None) -> str | None:
+    async def add_magnet(
+        self, magnet: str, *, download_dir: str | None, start: bool, comment: str | None = None
+    ) -> str | None:
         method = "load.start_verbose" if start else "load.verbose"
         extra: list[str] = []
         if download_dir:

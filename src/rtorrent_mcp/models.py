@@ -11,7 +11,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-MediaKind = Literal["movie", "series"]
+MediaKind = Literal["movie", "series", "cartoon"]
 DownloadState = Literal["active", "stopped", "paused", "complete"]
 
 

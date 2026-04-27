@@ -16,10 +16,11 @@ class Settings(BaseSettings):
     rtorrent_timeout_seconds: float = 30.0
 
     # Default destinations by media kind. The ``add_torrent`` tool resolves
-    # a ``kind`` hint ("movie" / "series") to the matching directory; callers
-    # can always override with an explicit ``download_dir``.
+    # a ``kind`` hint ("movie" / "series" / "cartoon") to the matching
+    # directory; callers can always override with an explicit ``download_dir``.
     rtorrent_download_dir_movies: str = "/mnt/storage/Media/Video/Movie/"
     rtorrent_download_dir_series: str = "/mnt/storage/Media/Video/Series/"
+    rtorrent_download_dir_cartoons: str = "/mnt/storage/Media/Video/Cartoon/"
 
     mcp_auth_token: str | None = None
 

@@ -5,6 +5,22 @@ work starts.
 
 ---
 
+## 2026-04-27
+
+### Add `kind=cartoon` routing → `/mnt/storage/Media/Video/Cartoon/`
+
+**Why.** Cross-repo cartoon flow (see metadata-mcp / clients / web
+history). Animated movies route to a dedicated dir so Plex picks them
+up into a Cartoon library. Series animation keeps going to Series/.
+
+**What.** `MediaKind` literal gains `"cartoon"`. New
+`rtorrent_download_dir_cartoons` setting (default
+`/mnt/storage/Media/Video/Cartoon/`); `_resolve_dir` maps `cartoon`
+→ that path. Three-line change overall, no test added — the existing
+routing tests cover the pattern by analogy.
+
+---
+
 ## 2026-04-25
 
 ### Expose `base_path` on the Download model
