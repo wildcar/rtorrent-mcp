@@ -32,10 +32,18 @@ _INFO_HASH = hashlib.sha1(_INFO).hexdigest().upper()
 def _row(hash_: str = _INFO_HASH, name: str = "demo", complete: int = 0) -> list:
     # Must match _MULTICALL_METHODS ordering in clients/rtorrent.py.
     return [
-        hash_, name, 1024, 0, 0, 0, 0,
-        "/downloads/demo",       # d.directory
+        hash_,
+        name,
+        1024,
+        0,
+        0,
+        0,
+        0,
+        "/downloads/demo",  # d.directory
         "/downloads/demo/file",  # d.base_path
-        1, 1, complete,
+        1,
+        1,
+        complete,
     ]
 
 
