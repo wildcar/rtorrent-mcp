@@ -24,6 +24,7 @@ class ToolError(BaseModel):
         "rtorrent_unreachable",
         "rtorrent_error",
         "internal_error",
+        "unsafe_path",
     ]
     message: str
 
@@ -49,6 +50,10 @@ class Download(BaseModel):
         ),
     )
     state: DownloadState = Field("stopped")
+    comment: str = Field(
+        "",
+        description="Comment URL (the tracker topic) as stored ruTorrent-style in d.custom2.",
+    )
 
 
 class AddTorrentResponse(BaseModel):
@@ -76,4 +81,23 @@ class AckResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     ok: bool = False
+    error: ToolError | None = None
+
+
+class RemoveResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool = False
+    deleted_files: int = Field(0, ge=0, description="Payload files unlinked (delete_data only).")
+    error: ToolError | None = None
+
+
+class ReplaceTorrentResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    changed: bool = Field(
+        False, description="False when the new .torrent has the same info-hash (nothing done)."
+    )
+    old_hash: str = ""
+    download: Download | None = None
     error: ToolError | None = None

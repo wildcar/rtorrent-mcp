@@ -5,6 +5,12 @@ cross-repo entries live in `../AGENTS/HISTORY.md`.
 
 ---
 
+## 2026-11-08 · remove(delete_data) + replace_torrent
+- What: `remove` can unlink the torrent's own files (realpath-inside-roots + shared-`base_path` guards, `unsafe_path` error); new `replace_torrent` swaps in an updated .torrent reusing on-disk data; `Download.comment` decoded from `d.custom2`; unit gets `ReadWritePaths=/mnt/storage/Media/Video`.
+- Why: the bot's `/torrents` command (delete with files, update from tracker).
+- Files: `src/rtorrent_mcp/{tools,models,config,server,clients/rtorrent}.py`, `tests/test_remove_replace.py`, `deploy/rtorrent-mcp.service`.
+- Next: deploy on `homesrv` (pull, `uv sync`, reinstall unit, restart).
+
 ## 2026-06-23 · Migrate to agent-template harness
 - What: Added `AGENTS.md`, `CLAUDE.md` pointer, `AGENTS/{SPEC,STATE,HISTORY,MEMORY,ENV}.md`, `docs/adr/TEMPLATE.md`; retired `history.md` (no `env.md` existed).
 - Why: Adopt the standard `wildcar/agent-template` harness in every repo.

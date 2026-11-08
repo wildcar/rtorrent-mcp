@@ -12,7 +12,8 @@ MCP server that drives a local `rtorrent` instance over SCGI/XML-RPC. Part of th
 | `get_download_status(hash)` | Fresh state for a single info-hash. |
 | `pause(hash)` / `resume(hash)` | `d.pause` / `d.resume`. |
 | `set_download_dir(hash, directory)` | Move the payload destination. |
-| `remove(hash)` | `d.erase` the download from rtorrent's session. Files on disk are not touched. |
+| `remove(hash, delete_data=False)` | `d.erase` the download. With `delete_data` also unlinks the torrent's own files (only inside `RTORRENT_DELETE_ROOTS`). |
+| `replace_torrent(hash, torrent_file_base64)` | Swap for an updated .torrent of the same release; reuses data on disk. No-op if the info-hash is unchanged. |
 
 All tools return `{result, error}` envelopes — `error.code` is one of
 `invalid_argument`, `not_found`, `rtorrent_unreachable`, `rtorrent_error`,

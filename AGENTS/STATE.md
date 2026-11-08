@@ -12,11 +12,15 @@ and report `base_path` so the bot can register completed files.
 
 - All seven tools live and deployed on the media host (`v.wildcar.ru`, port 8768,
   HTTP+SSE + Bearer token). `kind=cartoon` routing and `base_path` exposure shipped.
-- Harness migrated to the `agent-template` layout (this iteration).
+- Harness migrated to the `agent-template` layout.
+- 2026-11-08: `remove(delete_data)` + `replace_torrent` + `Download.comment` pushed
+  for the bot's `/torrents`; **not deployed yet** — `homesrv` needs pull + unit
+  reinstall (new `ReadWritePaths=/mnt/storage/Media/Video`, else deletion fails
+  with a read-only filesystem error).
 
 ## Next
 
-- Nothing planned. Reactive maintenance only (rtorrent/ruTorrent behaviour changes).
+- Deploy the 2026-11-08 changes on `homesrv` (operator; no ssh route from dev).
 
 ## Open questions
 

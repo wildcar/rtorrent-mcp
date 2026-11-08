@@ -44,6 +44,7 @@ def _row(hash_: str = _INFO_HASH, name: str = "demo", complete: int = 0) -> list
         1,
         1,
         complete,
+        "",  # d.custom2
     ]
 
 
@@ -70,6 +71,7 @@ async def test_add_torrent_file_passes_directory_and_returns_hash(
             "d.state",
             "d.is_active",
             "d.complete",
+            "d.custom2",
         ),
         _row(),
         strict=True,
@@ -122,6 +124,7 @@ async def test_add_magnet_returns_hash_from_uri(
         ("d.state", 0),
         ("d.is_active", 0),
         ("d.complete", 0),
+        ("d.custom2", ""),
     ):
         fake_rtorrent.on(field, lambda _h, v=val: v)
 
@@ -167,6 +170,7 @@ async def test_get_download_status_not_found(
         "d.state",
         "d.is_active",
         "d.complete",
+        "d.custom2",
     ):
         fake_rtorrent.on(field, _fault)
 

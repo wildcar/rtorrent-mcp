@@ -26,7 +26,7 @@ directories and `base_path` it returns are valid local paths.
 
 All return a `{result, error}` Pydantic envelope. `error` is a `ToolError`
 (`code` ∈ `invalid_argument | not_found | rtorrent_unreachable | rtorrent_error |
-internal_error`, plus `message`). Registered in `server.py`; impls in `tools.py`.
+internal_error | unsafe_path`, plus `message`). Registered in `server.py`; impls in `tools.py`.
 
 | Tool | Signature | Returns |
 |------|-----------|---------|
@@ -36,7 +36,8 @@ internal_error`, plus `message`). Registered in `server.py`; impls in `tools.py`
 | `pause` | `(hash)` | `AckResponse{ok}` |
 | `resume` | `(hash)` | `AckResponse{ok}` |
 | `set_download_dir` | `(hash, directory)` | `AckResponse{ok}` |
-| `remove` | `(hash)` | `AckResponse{ok}` |
+| `remove` | `(hash, delete_data=False)` | `RemoveResponse{ok, deleted_files}` |
+| `replace_torrent` | `(hash, torrent_file_base64, start=True)` | `ReplaceTorrentResponse{changed, old_hash, download}` |
 
 Details:
 
@@ -53,15 +54,28 @@ Details:
 - **`get_download_status`** — fetches each `d.*` field one-shot by hash (rtorrent
   has no multicall-by-hash). An "info-hash not found" fault is mapped to a clean
   `not_found`, not an error.
-- **`remove`** — `d.erase` only: drops the download from rtorrent's session and
-  **never touches files on disk**. There is intentionally **no `delete_data`
-  capability** — payload deletion is not exposed by this MCP. (If a future task adds
-  one, it must be an explicit decision with a sentinel-path guard so a misconfigured
-  shared `directory` can never be erased.)
+- **`remove`** — `d.erase` by default: drops the download from rtorrent's session
+  and leaves files on disk. With `delete_data=true` (added 2026-11-08 for the bot's
+  `/torrents` command) it `d.stop` + `d.close` + `d.erase`s, then unlinks **only the
+  torrent's own files** (`base_path` for single-file, `base_path/<f.path>` for
+  multi-file) and prunes the directories that became empty, never above
+  `base_path`. Guards, all checked **before** anything is erased → `unsafe_path`:
+  every target must resolve (realpath) strictly *inside* a delete root
+  (`RTORRENT_DELETE_ROOTS`, default = the three per-kind dirs; the root itself is
+  never a target), and no other download in the session may share the same
+  `base_path`. Empty `base_path` (unresolved magnet) → just erase.
+- **`replace_torrent`** — swap a download for an updated `.torrent` of the same
+  release. Same info-hash → `changed=false`, nothing touched. Otherwise: close +
+  erase the old entry (files kept), rename the old payload to the new torrent's
+  `info.name` if the tracker renamed the release (only inside delete roots, never
+  overwriting), load the new torrent into `dirname(base_path)` with the old comment,
+  so rtorrent hash-checks the data already on disk and fetches only what changed.
+  Files dropped from the new torrent stay on disk as orphans.
 
 `Download` model fields: `hash` (40-char upper hex), `name`, `size_bytes`,
 `completed_bytes`, `down_rate`, `up_rate`, `ratio` (float), `directory`,
-`base_path`, `state` (`active | stopped | paused | complete`).
+`base_path`, `state` (`active | stopped | paused | complete`), `comment` (decoded
+from ruTorrent's `d.custom2` sentinel — the tracker topic URL the bot set on add).
 
 ## Transport — hand-rolled async SCGI
 
@@ -103,8 +117,12 @@ divided by 1000.
   callers **must use `d.base_path`**. Caught in prod: every movie after the second
   resolved its `file_path` to the largest video in the shared `Movie/` dir.
   `base_path` is empty until rtorrent resolves metadata.
-- **`remove` / `d.erase` is data-safe** — never deletes files; do not add a
-  delete-data path casually.
+- **`remove(delete_data)` deletes per-file, not per-directory** — `rmtree` on
+  `base_path` would also eat Plex sidecars or a duplicate download's payload. Keep
+  the realpath-inside-roots and shared-`base_path` guards in front of any new
+  deletion path.
+- **The systemd unit needs `ReadWritePaths=/mnt/storage/Media/Video`** for
+  deletion/rename (`ProtectSystem=strict` otherwise makes the media tree read-only).
 - **ruTorrent comment sentinel** — `_set_comment` writes the comment URL into
   `d.custom2` as `"VRS24mrker" + rawurlencode(comment)`, the exact format ruTorrent
   expects, so the link shows in its UI. It sleeps 1 s first: `d.custom2.set` faults
@@ -116,6 +134,7 @@ divided by 1000.
 
 `config.py` (`Settings`, `pydantic-settings`): `rtorrent_scgi_url`,
 `rtorrent_timeout_seconds`, `rtorrent_download_dir_{movies,series,cartoons}`,
+`rtorrent_delete_roots` (comma-separated; empty → the per-kind dirs),
 `mcp_auth_token`. Transport (`MCP_TRANSPORT`, `MCP_HTTP_HOST`/`PORT`) read from env
 in `server.py`. See `AGENTS/ENV.md`.
 
@@ -123,7 +142,7 @@ in `server.py`. See `AGENTS/ENV.md`.
 
 ```
 src/rtorrent_mcp/
-  server.py    FastMCP entrypoint: registers the 7 tools, picks transport
+  server.py    FastMCP entrypoint: registers the 8 tools, picks transport
   tools.py     tool impls → {result, error}; error-code classification
   context.py   AppContext = Settings + RtorrentClient (async ctx manager)
   config.py    pydantic-settings Settings
@@ -136,7 +155,9 @@ deploy/        DEPLOY.md, rtorrent-mcp.service (systemd unit)
 
 ## Current state
 
-- ✅ All seven tools implemented, registered, and deployed on the media host (8768).
+- ✅ All seven original tools deployed on the media host (8768).
+- ⏳ `remove(delete_data)` + `replace_torrent` (2026-11-08) pushed; needs deploy on
+  `homesrv` incl. the unit's new `ReadWritePaths`.
 - ✅ `kind=cartoon` routing → `/mnt/storage/Media/Video/Cartoon/`.
 - ✅ `base_path` exposed on `Download` and consumed by the bot's completion poller.
 - No open work in this repo. See `AGENTS/STATE.md`.

@@ -23,6 +23,8 @@ ProtectSystem=strict
 ProtectHome=read-only
 PrivateTmp=true
 ReadWritePaths=/opt/rtorrent-mcp
+# remove(delete_data=true) unlinks payloads and replace_torrent renames them.
+ReadWritePaths=/mnt/storage/Media/Video
 # Needed only when SCGI uses a unix socket under /tmp or /var/run:
 # ReadWritePaths=/tmp/rtorrent.sock
 

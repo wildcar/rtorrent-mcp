@@ -39,7 +39,11 @@ _MULTICALL_METHODS: tuple[str, ...] = (
     "d.state=",
     "d.is_active=",
     "d.complete=",
+    "d.custom2=",
 )
+
+# ruTorrent's marker in front of the rawurlencoded comment in d.custom2.
+_COMMENT_SENTINEL = "VRS24mrker"
 
 
 def _row_to_dict(row: tuple[Any, ...]) -> dict[str, Any]:
@@ -56,6 +60,7 @@ def _row_to_dict(row: tuple[Any, ...]) -> dict[str, Any]:
         state,
         active,
         complete,
+        custom2,
     ) = row
     if complete:
         label = "complete"
@@ -81,7 +86,16 @@ def _row_to_dict(row: tuple[Any, ...]) -> dict[str, Any]:
         # many torrents and useless for "find the video file" callers.
         "base_path": str(base_path or ""),
         "state": label,
+        "comment": _decode_comment(str(custom2 or "")),
     }
+
+
+def _decode_comment(custom2: str) -> str:
+    """Reverse ``_set_comment``: strip ruTorrent's sentinel and unquote.
+    Anything else in custom2 is not a comment we understand → empty."""
+    if not custom2.startswith(_COMMENT_SENTINEL):
+        return ""
+    return urllib.parse.unquote(custom2[len(_COMMENT_SENTINEL) :])
 
 
 class RtorrentClient:
@@ -149,7 +163,7 @@ class RtorrentClient:
         prepends the sentinel "VRS24mrker", and stores the result in d.custom2.
         We replicate that exact format so the URL appears in the ruTorrent UI.
         """
-        value = "VRS24mrker" + urllib.parse.quote(comment, safe="")
+        value = _COMMENT_SENTINEL + urllib.parse.quote(comment, safe="")
         h = hash_.upper()
         # Give rtorrent a moment to register the download before we write
         # custom fields — calling d.custom2.set too early returns a fault.
@@ -198,9 +212,28 @@ class RtorrentClient:
 
     async def remove(self, hash_: str) -> None:
         """Erase the download from rtorrent's session. Files on disk are
-        left untouched — rtorrent's ``d.erase`` never deletes payload data,
-        and we deliberately don't add that capability to the MCP."""
+        left untouched — rtorrent's ``d.erase`` never deletes payload data;
+        payload deletion lives in ``tools.remove_impl`` behind path guards."""
         await self.call("d.erase", hash_.upper())
+
+    async def close_and_erase(self, hash_: str) -> None:
+        """Stop + close the download (releasing file handles) and erase it.
+        Used before the caller touches the payload on disk."""
+        h = hash_.upper()
+        for method in ("d.stop", "d.close"):
+            try:
+                await self.call(method, h)
+            except RtorrentError as exc:
+                log.warning("rtorrent.close_failed", method=method, hash=h, error=str(exc))
+        await self.call("d.erase", h)
+
+    async def is_multi_file(self, hash_: str) -> bool:
+        return bool(await self.call("d.is_multi_file", hash_.upper()))
+
+    async def list_file_paths(self, hash_: str) -> list[str]:
+        """Torrent-relative paths of every file in the download."""
+        rows = await self.call("f.multicall", hash_.upper(), "", "f.path=")
+        return [str(r[0]) for r in rows or [] if r and r[0]]
 
 
 # -- helpers ------------------------------------------------------------
@@ -219,6 +252,23 @@ def _info_hash_from_magnet(magnet: str) -> str | None:
     if len(hash_part) == 40 and all(c in "0123456789abcdefABCDEF" for c in hash_part):
         return hash_part.upper()
     return hash_part or None
+
+
+def torrent_info(content: bytes) -> tuple[str, str, bool]:
+    """Return ``(info_hash, name, is_multi_file)`` of a .torrent payload."""
+    info_slice = _extract_bencoded_value(content, key=b"info")
+    if info_slice is None:
+        raise RtorrentError(".torrent payload is missing the 'info' dict")
+    import hashlib
+
+    raw_name = _extract_bencoded_value(info_slice, key=b"name") or b""
+    _, _, name_bytes = raw_name.partition(b":")
+    is_multi = _extract_bencoded_value(info_slice, key=b"files") is not None
+    return (
+        hashlib.sha1(info_slice).hexdigest().upper(),
+        name_bytes.decode("utf-8", errors="replace"),
+        is_multi,
+    )
 
 
 def _info_hash_from_torrent(content: bytes) -> str:
@@ -276,4 +326,4 @@ def _skip_bencoded(data: bytes, i: int) -> int:
     return colon + 1 + length
 
 
-__all__ = ["RtorrentClient", "RtorrentError"]
+__all__ = ["RtorrentClient", "RtorrentError", "torrent_info"]

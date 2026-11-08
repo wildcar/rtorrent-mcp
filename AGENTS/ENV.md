@@ -30,6 +30,7 @@ deps changed).
 | `RTORRENT_DOWNLOAD_DIR_MOVIES` | `/mnt/storage/Media/Video/Movie/` | `kind="movie"`. Absolute, must exist on the rtorrent host. |
 | `RTORRENT_DOWNLOAD_DIR_SERIES` | `/mnt/storage/Media/Video/Series/` | `kind="series"`. |
 | `RTORRENT_DOWNLOAD_DIR_CARTOONS` | `/mnt/storage/Media/Video/Cartoon/` | `kind="cartoon"`. |
+| `RTORRENT_DELETE_ROOTS` | *(empty → the three dirs above)* | Comma-separated allowlist for `remove(delete_data)` / `replace_torrent` renames. Targets must be strictly inside one. |
 | `MCP_AUTH_TOKEN` | — | Bearer token for HTTP/SSE; empty for stdio-only dev. |
 | `MCP_TRANSPORT` | `stdio` (prod sets `streamable-http`) | `stdio` \| `sse` \| `streamable-http`. |
 | `MCP_HTTP_HOST` / `MCP_HTTP_PORT` | `127.0.0.1` / `8768` | HTTP bind (prod host `0.0.0.0`). |

@@ -20,6 +20,8 @@ from .models import (
     DownloadStatusResponse,
     ListDownloadsResponse,
     MediaKind,
+    RemoveResponse,
+    ReplaceTorrentResponse,
 )
 from .tools import (
     add_torrent_impl,
@@ -27,6 +29,7 @@ from .tools import (
     list_downloads_impl,
     pause_impl,
     remove_impl,
+    replace_torrent_impl,
     resume_impl,
     set_download_dir_impl,
 )
@@ -54,8 +57,8 @@ def build_server(ctx: AppContext) -> FastMCP:
         instructions=(
             "Controls a local rtorrent instance over SCGI/XML-RPC. Use "
             "add_torrent to enqueue a .torrent (base64) or magnet URI; "
-            "list_downloads / get_download_status / pause / resume / remove "
-            "manage existing downloads."
+            "list_downloads / get_download_status / pause / resume / remove / "
+            "replace_torrent manage existing downloads."
         ),
     )
 
@@ -98,9 +101,22 @@ def build_server(ctx: AppContext) -> FastMCP:
         """Change the destination directory of an existing download."""
         return await set_download_dir_impl(ctx, hash=hash, directory=directory)
 
-    async def remove(hash: str) -> AckResponse:
-        """Erase the download from rtorrent's session. Files on disk are not touched."""
-        return await remove_impl(ctx, hash=hash)
+    async def remove(hash: str, delete_data: bool = False) -> RemoveResponse:
+        """Erase the download from rtorrent's session. Files on disk are kept
+        unless ``delete_data`` is true — then the torrent's own files are
+        unlinked (only inside the configured media roots)."""
+        return await remove_impl(ctx, hash=hash, delete_data=delete_data)
+
+    async def replace_torrent(
+        hash: str, torrent_file_base64: str, start: bool = True
+    ) -> ReplaceTorrentResponse:
+        """Replace a download with an updated .torrent (e.g. re-fetched from
+        the tracker). Same info-hash → ``changed=false``, nothing touched.
+        Otherwise the old entry is erased (files kept) and the new torrent is
+        loaded into the same directory, reusing the data already on disk."""
+        return await replace_torrent_impl(
+            ctx, hash=hash, torrent_file_base64=torrent_file_base64, start=start
+        )
 
     mcp.tool()(add_torrent)
     mcp.tool()(list_downloads)
@@ -109,6 +125,7 @@ def build_server(ctx: AppContext) -> FastMCP:
     mcp.tool()(resume)
     mcp.tool()(set_download_dir)
     mcp.tool()(remove)
+    mcp.tool()(replace_torrent)
     return mcp
 
 

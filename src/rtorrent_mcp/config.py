@@ -22,7 +22,22 @@ class Settings(BaseSettings):
     rtorrent_download_dir_series: str = "/mnt/storage/Media/Video/Series/"
     rtorrent_download_dir_cartoons: str = "/mnt/storage/Media/Video/Cartoon/"
 
+    # Comma-separated allowlist for payload deletion / renames. Empty →
+    # the three per-kind dirs above. A path is touched only when it lies
+    # strictly *inside* one of these roots (never the root itself).
+    rtorrent_delete_roots: str = ""
+
     mcp_auth_token: str | None = None
+
+    def delete_roots(self) -> list[str]:
+        raw = self.rtorrent_delete_roots or ",".join(
+            (
+                self.rtorrent_download_dir_movies,
+                self.rtorrent_download_dir_series,
+                self.rtorrent_download_dir_cartoons,
+            )
+        )
+        return [r.strip() for r in raw.split(",") if r.strip()]
 
 
 @lru_cache(maxsize=1)
