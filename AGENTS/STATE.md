@@ -14,13 +14,12 @@ and report `base_path` so the bot can register completed files.
   HTTP+SSE + Bearer token). `kind=cartoon` routing and `base_path` exposure shipped.
 - Harness migrated to the `agent-template` layout.
 - 2026-11-08: `remove(delete_data)` + `replace_torrent` + `Download.comment` pushed
-  for the bot's `/torrents`; **not deployed yet** — `homesrv` needs pull + unit
-  reinstall (new `ReadWritePaths=/mnt/storage/Media/Video`, else deletion fails
-  with a read-only filesystem error).
+  for the bot's `/torrents`; deployed on `homesrv` 2026-11-08 with the unit's new
+  `ReadWritePaths=/mnt/storage/Media/Video` (tools listed, `comment` decoded live).
 
 ## Next
 
-- Deploy the 2026-11-08 changes on `homesrv` (operator; no ssh route from dev).
+- Nothing planned. Reactive maintenance only.
 
 ## Open questions
 

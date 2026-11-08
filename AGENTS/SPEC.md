@@ -156,8 +156,7 @@ deploy/        DEPLOY.md, rtorrent-mcp.service (systemd unit)
 ## Current state
 
 - ✅ All seven original tools deployed on the media host (8768).
-- ⏳ `remove(delete_data)` + `replace_torrent` (2026-11-08) pushed; needs deploy on
-  `homesrv` incl. the unit's new `ReadWritePaths`.
+- ✅ `remove(delete_data)` + `replace_torrent` (2026-11-08) deployed on `homesrv`.
 - ✅ `kind=cartoon` routing → `/mnt/storage/Media/Video/Cartoon/`.
 - ✅ `base_path` exposed on `Download` and consumed by the bot's completion poller.
 - No open work in this repo. See `AGENTS/STATE.md`.
